@@ -11,10 +11,10 @@
         See domoticz wiki above.<br/>
     </description>
     <params>
-        <param field="Username" label="Username" width="200px" required="true" default=""/>
-        <param field="Password" label="Password" width="200px" required="true" default=""/>
-        <param field="UID" label="UID" width="200px" required="true" default=""/>
-        <param field="Mode1" label="Logging Level" width="200px">
+        <param field="Mode1" label="Username" width="200px" required="true" default=""/>
+        <param field="Mode2" label="Password" width="200px" required="true" default=""/>
+        <param field="Mode3" label="UID" width="200px" required="true" default=""/>
+        <param field="Mode6" label="Logging Level" width="200px">
             <options>
                 <option label="Normal" value="Normal"  default="true"/>
                 <option label="Verbose" value="Verbose"/>
@@ -58,7 +58,7 @@ class BasePlugin:
         noerror = True
         try:
             r = requests.get('https://www.econet24.com')
-            payload = {'username': Parameters["Username"], 'password': Parameters["Password"],
+            payload = {'username': Parameters["Mode1"], 'password': Parameters["Mode2"],
                      'csrfmiddlewaretoken': r.cookies['csrftoken']}
             url = "https://www.econet24.com/login/?next=main/"
             rx = requests.post(url, data=payload)
@@ -87,14 +87,14 @@ class BasePlugin:
         return noerror
 
     def onStart(self):
-        self.uid = Parameters["UID"]
+        self.uid = Parameters["Mode3"]
 
         # setup the appropriate logging level
         try:
-            debuglevel = int(Parameters["Mode1"])
+            debuglevel = int(Parameters["Mode6"])
         except ValueError:
             debuglevel = 0
-            self.loglevel = Parameters["Mode1"]
+            self.loglevel = Parameters["Mode6"]
         if debuglevel != 0:
             self.debug = True
             Domoticz.Debugging(debuglevel)
@@ -141,7 +141,7 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Log("onHeartbeat called")
 
-        if (self.expiry - datetime.now) < 0:
+        if (self.expiry - time.time()) < 0:
             self.login()
 
         self.getTemp()
