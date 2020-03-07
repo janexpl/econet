@@ -67,6 +67,7 @@ class BasePlugin:
             for cookie in rx.history[0].cookies:
                if cookie.name == 'csrftoken':
                   self.expiry = cookie.expires
+            Domoticz.Debug("Login successfully")
             return True
         except ConnectionError:
             Domoticz.Debug("Unable to connect")
@@ -125,23 +126,23 @@ class BasePlugin:
         Domoticz.Debugging(0)
 
     def onConnect(self, Connection, Status, Description):
-        Domoticz.Log("onConnect called")
+        Domoticz.Debug("onConnect called")
 
     def onMessage(self, Connection, Data):
-        Domoticz.Log("onMessage called")
+        Domoticz.Debug("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        Domoticz.Debug("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
 
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
-        Domoticz.Log("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
+        Domoticz.Debug("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onDisconnect(self, Connection):
-        Domoticz.Log("onDisconnect called")
+        Domoticz.Debug("onDisconnect called")
 
     def onHeartbeat(self):
-        Domoticz.Log("onHeartbeat called")
+        Domoticz.Debug("onHeartbeat called")
 
         if self.getTemp():
             Devices[1].Update(nValue=0, sValue=str(self.heaterTemp), TimedOut=False)
