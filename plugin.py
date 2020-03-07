@@ -152,7 +152,7 @@ class BasePlugin:
         Domoticz.Debug("onHeartbeat called")
 
         if self.getTemp():
-            Devices[1].Update(nValue=0, sValue=str(self.heaterTemp), TimedOut=False)
+            Devices[1].Update(nValue=0, sValue=str(round(self.heaterTemp,2)), TimedOut=False)
 
 global _plugin
 _plugin = BasePlugin()
