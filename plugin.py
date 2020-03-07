@@ -113,8 +113,8 @@ class BasePlugin:
 
         devicecreated = []
         if 1 not in Devices:
-            Domoticz.Device(Name="Thermostat temp", Unit=6, TypeName="Temperature").Create()
-            devicecreated.append(deviceparam(6, 0, "50"))  # default is 20 degrees
+            Domoticz.Device(Name="Heater Temperature", Unit=1, TypeName="Temperature").Create()
+            devicecreated.append(deviceparam(1, 0, "50"))  # default is 20 degrees
 
         for device in devicecreated:
             Devices[device.unit].Update(nValue=device.nvalue, sValue=device.svalue)
