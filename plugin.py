@@ -55,7 +55,7 @@ class BasePlugin:
         self.loglevel = None
         return
     def login(self):
-        noerror = True
+
         try:
             r = requests.get('https://www.econet24.com')
             payload = {'username': Parameters["Mode1"], 'password': Parameters["Mode2"],
@@ -67,24 +67,26 @@ class BasePlugin:
             for cookie in rx.history[0].cookies:
                if cookie.name == 'csrftoken':
                   self.expiry = cookie.expires
+            return True
         except ConnectionError:
             Domoticz.Debug("Unable to connect")
-            noerror = False
-
-        return noerror
+            return False
 
     def getTemp(self):
-        noerror = True
+
         try:
+            if (self.expiry - time.time()) < 0:
+                self.login()
+
             cookies = {'language': 'pl', 'csrftoken': self.csrftoken,
                     'sessionid': self.sessionId}
             req = "https://www.econet24.com/service/getDeviceRegParams?uid=" + self.uid
             ry = requests.get(req, cookies=cookies)
             self.heaterTemp = ry.json()['data']['1024']
+            return True
         except ConnectionError:
             Domoticz.Debug("Unable to get temperature")
-            noerror = False
-        return noerror
+            return False
 
     def onStart(self):
         self.uid = Parameters["Mode3"]
@@ -141,11 +143,8 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Log("onHeartbeat called")
 
-        if (self.expiry - time.time()) < 0:
-            self.login()
-
-        self.getTemp()
-        Devices[1].Update(nValue=0, sValue=str(self.heaterTemp), TimedOut=False)
+        if self.getTemp():
+            Devices[1].Update(nValue=0, sValue=str(self.heaterTemp), TimedOut=False)
 
 global _plugin
 _plugin = BasePlugin()

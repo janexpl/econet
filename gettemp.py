@@ -13,3 +13,5 @@ for cookie in rx.history[0].cookies:
         expiry = cookie.expires
 
 print(csrftoken + " " + sessionId + " " + str(expiry) + " " + str(time.time()))
+
+print(str(expiry - time.time()))
