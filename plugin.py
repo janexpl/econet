@@ -14,6 +14,7 @@
         <param field="Mode1" label="Username" width="200px" required="true" default=""/>
         <param field="Mode2" label="Password" width="200px" required="true" default=""/>
         <param field="Mode3" label="UID" width="200px" required="true" default=""/>
+        <param field="Mode4" label="Heartbeat" width="200px" required="true" default="30"/>
         <param field="Mode6" label="Logging Level" width="200px">
             <options>
                 <option label="Normal" value="Normal"  default="true"/>
@@ -91,7 +92,13 @@ class BasePlugin:
 
     def onStart(self):
         self.uid = Parameters["Mode3"]
-
+        # If poll interval between 10 and 60 sec.
+        if 10 <= int(Parameters["Mode4"]) <= 60:
+            Domoticz.Log("Update interval set to " + Parameters["Mode4"])
+            Domoticz.Heartbeat(int(Parameters["Mode4"]))
+        else:
+            # If not, set to 20 sec.
+            Domoticz.Heartbeat(30)
         # setup the appropriate logging level
         try:
             debuglevel = int(Parameters["Mode6"])
