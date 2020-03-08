@@ -79,7 +79,7 @@ class BasePlugin:
                         novar = False
                         break
             if novar:
-                Domoticz.Debug("User Variable {} does not exist. Creation requested".format(varname), "Verbose")
+                Domoticz.Debug("User Variable {} does not exist. Creation requested".format(varname))
                 DomoticzAPI("type=command&param=saveuservariable&vname={}&vtype=2&vvalue={}".format(varname, str(
                     self.CWUPump)))
             else:
