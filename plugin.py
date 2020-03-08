@@ -79,12 +79,15 @@ class BasePlugin:
         try:
             if (self.expiry - time.time()) < 0:
                 self.login()
-
             cookies = {'language': 'pl', 'csrftoken': self.csrftoken,
                     'sessionid': self.sessionId}
             req = "https://www.econet24.com/service/getDeviceRegParams?uid=" + self.uid
             ry = requests.get(req, cookies=cookies)
-            self.heaterTemp = ry.json()['data']['1024']
+            if "error" in ry.json():
+                self.login()
+            else:
+                self.heaterTemp = ry.json()['data']['1024']
+
             return True
         except ConnectionError:
             Domoticz.Debug("Unable to get temperature")
