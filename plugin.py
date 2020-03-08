@@ -66,8 +66,27 @@ class BasePlugin:
         return
 
     def saveUserVar(self):
+        variables = DomoticzAPI("type=command&param=getuservariables")
         varname = Parameters["Name"] + "- CWUPumpWork"
-        DomoticzAPI("type=command&param=updateuservariable&vname={}&vtype=2&vvalue={}".format(varname, str(self.CWUPump)))
+        if variables:
+            # there is a valid response from the API but we do not know if our variable exists yet
+            novar = True
+            valuestring = ""
+            if "result" in variables:
+                for variable in variables["result"]:
+                    if variable["Name"] == varname:
+                        valuestring = variable["Value"]
+                        novar = False
+                        break
+            if novar:
+                self.WriteLog("User Variable {} does not exist. Creation requested".format(varname), "Verbose")
+                DomoticzAPI("type=command&param=saveuservariable&vname={}&vtype=2&vvalue={}".format(varname, str(
+                    self.CWUPump)))
+            else:
+                DomoticzAPI("type=command&param=updateuservariable&vname={}&vtype=2&vvalue={}".format(varname, str(
+                    self.CWUPump)))
+
+
 
     def login(self):
 
