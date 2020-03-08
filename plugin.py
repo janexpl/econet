@@ -11,8 +11,12 @@
         See domoticz wiki above.<br/>
     </description>
     <params>
-        <param field="Mode1" label="Username" width="200px" required="true" default=""/>
-        <param field="Mode2" label="Password" width="200px" required="true" default=""/>
+        <param field="Address" label="Domoticz IP Address" width="200px" required="true" default="localhost"/>
+        <param field="Port" label="Port" width="40px" required="true" default="8080"/>
+        <param field="Username" label="Username" width="200px" required="false" default=""/>
+        <param field="Password" label="Password" width="200px" required="false" default=""/>
+        <param field="Mode1" label="Econet username" width="200px" required="true" default=""/>
+        <param field="Mode2" label="Econet password" width="200px" required="true" default=""/>
         <param field="Mode3" label="UID" width="200px" required="true" default=""/>
         <param field="Mode4" label="Heartbeat" width="200px" required="true" default="30"/>
         <param field="Mode6" label="Logging Level" width="200px">
@@ -52,9 +56,16 @@ class BasePlugin:
         self.csrftoken = None
         self.expiry = time.time()
         self.uid = None
+        self.cwuTemp = None
+        self.CWUPump = None
         self.sessionId = None
         self.loglevel = None
         return
+
+    def saveUserVar(self):
+        varname = Parameters["Name"] + "- CWUPumpWork"
+        DomoticzAPI("type=command&param=updateuservariable&vname={}&vtype=2&vvalue={}".format(varname, str(self.CWUPump)))
+
     def login(self):
 
         try:
@@ -74,20 +85,21 @@ class BasePlugin:
             Domoticz.Debug("Unable to connect")
             return False
 
-    def getTemp(self):
+    def getParams(self):
 
         try:
             if (self.expiry - time.time()) < 0:
                 self.login()
             cookies = {'language': 'pl', 'csrftoken': self.csrftoken,
                     'sessionid': self.sessionId}
-            req = "https://www.econet24.com/service/getDeviceRegParams?uid=" + self.uid
+            req = "https://www.econet24.com/service/getDeviceParams?uid=" + self.uid
             ry = requests.get(req, cookies=cookies)
             if "error" in ry.json():
                 self.login()
             else:
-                self.heaterTemp = ry.json()['data']['1024']
-
+                self.heaterTemp = ry.json()['curr']['tempCO']
+                self.cwuTemp = ry.json()['curr']['tempCWU']
+                self.CWUPump = ry.json()['curr']['pumpCWUWorks']
             return True
         except ConnectionError:
             Domoticz.Debug("Unable to get temperature")
@@ -154,8 +166,9 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
 
-        if self.getTemp():
+        if self.getParams():
             Devices[1].Update(nValue=0, sValue=str(round(self.heaterTemp,2)), TimedOut=False)
+            self.saveUserVar()
 
 global _plugin
 _plugin = BasePlugin()
@@ -206,6 +219,31 @@ def DumpConfigToLog():
         Domoticz.Debug("Device sValue:   '" + Devices[x].sValue + "'")
         Domoticz.Debug("Device LastLevel: " + str(Devices[x].LastLevel))
     return
+
+def DomoticzAPI(APICall):
+
+    resultJson = None
+    url = "http://{}:{}/json.htm?{}".format(Parameters["Address"], Parameters["Port"], parse.quote(APICall, safe="&="))
+    Domoticz.Debug("Calling domoticz API: {}".format(url))
+    try:
+        req = request.Request(url)
+        if Parameters["Username"] != "":
+            Domoticz.Debug("Add authentification for user {}".format(Parameters["Username"]))
+            credentials = ('%s:%s' % (Parameters["Username"], Parameters["Password"]))
+            encoded_credentials = base64.b64encode(credentials.encode('ascii'))
+            req.add_header('Authorization', 'Basic %s' % encoded_credentials.decode("ascii"))
+
+        response = request.urlopen(req)
+        if response.status == 200:
+            resultJson = json.loads(response.read().decode('utf-8'))
+            if resultJson["status"] != "OK":
+                Domoticz.Error("Domoticz API returned an error: status = {}".format(resultJson["status"]))
+                resultJson = None
+        else:
+            Domoticz.Error("Domoticz API: http error = {}".format(response.status))
+    except:
+        Domoticz.Error("Error calling '{}'".format(url))
+    return resultJson
 
 
 
