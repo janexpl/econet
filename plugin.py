@@ -86,8 +86,6 @@ class BasePlugin:
                 DomoticzAPI("type=command&param=updateuservariable&vname={}&vtype=2&vvalue={}".format(varname, str(
                     self.CWUPump)))
 
-
-
     def login(self):
 
         try:
@@ -161,7 +159,10 @@ class BasePlugin:
         devicecreated = []
         if 1 not in Devices:
             Domoticz.Device(Name="Heater Temperature", Unit=1, TypeName="Temperature").Create()
-            devicecreated.append(deviceparam(1, 0, "50"))  # default is 20 degrees
+            devicecreated.append(deviceparam(1, 0, "50"))  # default is 50 degrees
+        if 2 not in Devices:
+            Domoticz.Device(Name="CWU Temperature", Unit=2, TypeName="Temperature").Create()
+            devicecreated.append(deviceparam(2, 0, "50"))  # default is 50 degrees
 
         for device in devicecreated:
             Devices[device.unit].Update(nValue=device.nvalue, sValue=device.svalue)
@@ -190,6 +191,7 @@ class BasePlugin:
 
         if self.getParams():
             Devices[1].Update(nValue=0, sValue=str(round(self.heaterTemp,2)), TimedOut=False)
+            Devices[2].Update(nValue=0, sValue=str(round(self.cwuTemp, 2)), TimedOut=False)
             self.saveUserVar()
 
 global _plugin
