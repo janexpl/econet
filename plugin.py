@@ -37,6 +37,9 @@
 """
 import Domoticz
 import requests
+import json
+from urllib import parse, request
+import base64
 from datetime import datetime, timedelta
 import time
 
